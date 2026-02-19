@@ -167,11 +167,12 @@ class PointsController:
 
                     output_excel_completo = io.BytesIO()
                     with pd.ExcelWriter(output_excel_completo, engine="openpyxl") as writer:
-                        # Convertir la columna de identificación a texto antes de exportar 
-                        dias_ctrl.data.astype({"Código de identificación interna del predio": str}).to_excel(
-                            writer, index=False, sheet_name="Distribucion_Final" )
-                        resumen.to_excel(writer, index=False, sheet_name="Resumen")
+                        if "Código de identificación interna del predio" in dias_ctrl.data.columns:
+                            dias_ctrl.data = dias_ctrl.data.astype({"Código de identificación interna del predio": str})
 
+                        dias_ctrl.data.to_excel(writer, index=False, sheet_name="Distribucion_Final")
+                        resumen.to_excel(writer, index=False, sheet_name="Resumen")
+                
                     st.download_button(
                         label="📥 Descargar distribución completa (todos los días + resumen)",
                         data=output_excel_completo.getvalue(),
@@ -189,6 +190,11 @@ class PointsController:
                         output_excel_dia = io.BytesIO()
                         safe_dia = str(dia).replace(" ", "_") # evitar espacios en nombres de archivo
                         with pd.ExcelWriter(output_excel_dia, engine="openpyxl") as writer:
+                            if "Código de identificación interna del predio" in subset.columns:
+                                subset = subset.astype({"Código de identificación interna del predio": str})
+                            
+                            subset.to_excel(writer, index=False, sheet_name=f"Dia_{safe_dia}")
+                            
                             # Convertir la columna de identificación a texto antes de exportar
                             subset.astype({"Código de identificación interna del predio": str}).to_excel(
                                 writer, index=False, sheet_name=f"Dia_{safe_dia}"
@@ -200,3 +206,4 @@ class PointsController:
                             file_name=f"distribucion_dia_{dia}.xlsx",
                             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                         )
+
